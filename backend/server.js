@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
+import habitRoutes from "./routes/habits.js";
 import { errorHandler, notFound } from "./middleware/errorhandler.js";
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(express.json({limit:"1mb"}));
 app.get("/api/health", (req, res) => res.json({status:"ok", time:new Date().toISOString()}))
 
 app.use("/api/auth", authRoutes);
+app.use("/api/habits", habitRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

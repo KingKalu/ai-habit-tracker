@@ -20,4 +20,8 @@ const habitLogSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
-}, { timestamps: true });   
+}, { timestamps: true });
+
+habitLogSchema.index({ userId: 1, habitId: 1, completedDate: 1 }, { unique: true });
+
+export default mongoose.model("HabitLog", habitLogSchema);
