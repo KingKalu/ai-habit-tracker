@@ -17,7 +17,7 @@ export const getHabits = async (req, res) => {
 
 export const createHabit = async (req, res) => {
     try {
-        const { name, description, category, frequency, targetDays, color } = req.body;
+        const { name, description, category, frequency, targetDays, color, icon } = req.body;
         if (!name) {
             return res.status(400).json({ message: "Habit name is required" });
         }
