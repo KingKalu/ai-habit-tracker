@@ -38,7 +38,7 @@ export const calcStreak = (sortedDateKeys) => {
   if (!set.has(today) && !set.has(yesterday)) {
     current = 0;
   } else {
-    if (set.has(today)) {
+    if (!set.has(today)) {
       cursor = subDays(cursor, 1);
     }
     while (set.has(toDateKey(cursor))) {

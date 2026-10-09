@@ -2,7 +2,6 @@ import HabitLog from "../models/HabitLog.js";
 import Habit from "../models/Habit.js";
 
 import { todayKey, last90Days, lastNDays, calcStreak } from "../utils/dateHelpers.js";
-import { tr } from "date-fns/locale";
 
 export const markComplete = async (req, res) => {
     try {
@@ -15,8 +14,8 @@ export const markComplete = async (req, res) => {
 
         const log = await HabitLog.findOneAndUpdate(
             { userId: req.user._id, habitId, completedDate },
-            { $set: { completedDate } }, 
-            { new: true }
+            { $setOnInsert: { completedDate } }, 
+            { new: true, upsert:true }
         );
         res.status(201).json(log);
     } catch (err) {
