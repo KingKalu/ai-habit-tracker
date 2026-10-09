@@ -28,11 +28,7 @@ export const unmarkComplete = async (req, res) => {
     try {
         const { habitId, date } = req.body;
         const completedDate = date || todayKey();
-        const habit = await Habit.findOneAndDelete({userId: req.user._id, habitId});
-        if (!habit) {
-            return res.status(404).json({ message: "Habit not found" });
-        }
-        const log = await HabitLog.findOneAndDelete({ userId: req.user._id, habitId, completedDate });
+        await HabitLog.findOneAndDelete({ userId: req.user._id, habitId, completedDate });
         res.json({ message: "unmarked" });
     } catch (err) {
         res.status(500).json({ message: err.message });
