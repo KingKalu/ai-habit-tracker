@@ -1,67 +1,69 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const CATEGORIES = [
-    "Health",
-    "Fitness",
-    "Learning",
-    "Mindfulness",
-    "Productivity",
-    "social",
-    "Finance",
-    "Creative",
-    "Other",
-]
+  "Health",
+  "Fitness",
+  "Learning",
+  "Mindfulness",
+  "Productivity",
+  "social",
+  "Finance",
+  "Creative",
+  "Other",
+];
 
-const habitSchema = new mongoose.Schema({
+const habitSchema = new mongoose.Schema(
+  {
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        index: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
     },
     name: {
-        type: String,
-        required: true,
-        trim: true,
+      type: String,
+      required: true,
+      trim: true,
     },
     description: {
-        type: String,
-        default: "",
-        trim: true,
+      type: String,
+      default: "",
+      trim: true,
     },
     category: {
-        type: String,
-        enum: CATEGORIES,
-        default: "Other",
+      type: String,
+      enum: CATEGORIES,
+      default: "Other",
     },
     frequency: {
-        type: String,
-        enum: ["daily", "weekly"],
-        default: "daily",
+      type: String,
+      enum: ["daily", "weekly"],
+      default: "daily",
     },
     targetDays: {
-        type: Number,
-        default: 7,
-        min: 1,
-        max: 7,
+      type: Number,
+      default: 7,
+      min: 1,
+      max: 7,
     },
     color: {
-        type: String,
-        default: "#6366f1",
+      type: String,
+      default: "#6366f1",
     },
     icon: {
-        type: String,
-        default: "fa-solid fa-star",
+      type: String,
+      default: "fa-solid fa-star",
     },
     isArchived: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
-    order: [{
-        type: Number,
-        default: 0,
-    }],
-}, { timestamps: true
-})
+    order: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true },
+);
 export const HABIT_CATEGORIES = CATEGORIES;
 export default mongoose.model("Habit", habitSchema);
