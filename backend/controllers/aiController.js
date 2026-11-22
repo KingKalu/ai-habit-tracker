@@ -56,3 +56,95 @@ export const weeklyReport = async (req, res) => {
   }
 };
 
+export const suggestHabits = async (req, res) => {
+  try {
+    const { goals, productiveTime, struggles } = req.body;
+    const userMsg = `User's goals: ${goals || "not provided"}\nMost productive time: ${productiveTime || "not provided"}\nPast struggles || ${struggles || "not provided"}\n\nSuggest 3 personalized habits now. Return JSON only.`;
+
+    const { content } = await chatCompletion({
+      system: SYSTEM_PROMPTS.suggestion,
+      user: userMsg,
+    });
+
+    let suggestions = [];
+    try {
+      const parsed = JSON.parse(content.replace(/```json/g, "").trim());
+      suggestions = parsed.suggestions || [];
+    } catch {
+      suggestions = [];
+    }
+
+    if (!suggestions.length) {
+      suggestions = [
+        {
+          name: "10-minute morning walk",
+          description: "Start the day with light movement and fresh air.",
+          frequency: "daily",
+          category: "Fitness",
+          icon: "🧘‍♂️",
+          reason: "Low-friction way to build consistency early in the day.",
+        },
+        {
+          name: "Read 5 pages",
+          description: "Short daily reading to build a learning routine.",
+          frequency: "daily",
+          category: "Learning",
+          icon: "📚",
+          reason: "Compounds into significant knowledge over weeks.",
+        },
+        {
+          name: "2 minutes of mindful breathing",
+          description: "Pause and breathe to reset focus and reduce stress.",
+          frequency: "daily",
+          category: "Mindfullness",
+          icon: "",
+          reason: "Tiny ancho habit that fits any schedule.",
+        },
+      ];
+    }
+    await AiInsight.create({
+      userId: req.user._id,
+      type: "suggestion",
+      content: JSON.stringify(suggestions),
+      meta: { goal, productiveTime, struggles },
+    });
+    res.json({ suggestions });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const recoveryPlan = async (req, res) => {
+  try {
+    const { habitId } = req.body;
+    const habit = Habit.findOne({
+      _id: habitId,
+      userId: req.user._id,
+    });
+    if (!habit) return res.status(404).json({ message: "Habit not found" });
+
+    const logs = await HabitLog.find({
+      userId: req.user._id,
+      habitId,
+    }).sort({ completedDate: -1 });
+    const keys = logs.map((l) => l.completedDate);
+    const { current, longest } = calcStreak(keys);
+
+    const userMsg = `Habit: ${habit.name} (${habit.category}).\nDescription: ${habit.description || "none"}.\nCurrent streak: ${current} days. Longest ever: ${longest} days. The user just broke a streak. Write a warm, actionable 3-day recovery plan.`;
+    const { content } = await chatCompletion({
+      system: SYSTEM_PROMPTS.recovery,
+      user: userMsg,
+    });
+    await AiInsight.create({
+      userId: req.user._id,
+      type: "recovery",
+      content,
+      meta: { habitId },
+    });
+    res.json({ content });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
