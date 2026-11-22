@@ -1,7 +1,7 @@
 import Habit from "../models/Habit.js";
 import HabitLog from "../models/HabitLog.js";
 import AiInsight from "../models/AiInsight.js";
-import { chatCompletion } from "../utils/aiService.js";
+import { chatCompletion, SYSTEM_PROMPTS } from "../utils/aiService.js";
 import { lastNDays, calcStreak, todayKey } from "../utils/dateHelpers.js;";
 
 const buildWeeklyContext = async (userId) => {
@@ -32,19 +32,22 @@ export const weeklyReport = async (req, res) => {
   try {
     const ctx = await buildWeeklyContext(req.user._id);
     if (!ctx.perHabit.length) {
-      return res.json({ content: "You don't have any active habits yet. Create your first habit to start tracking - I'll generate a weekly report once you have some data." });
+      return res.json({
+        content:
+          "You don't have any active habits yet. Create your first habit to start tracking - I'll generate a weekly report once you have some data.",
+      });
     }
     const userMsg = `Here is the user's habit data for the past 7 days ($ctx.days[0] to $ctx.days[6]}):\n\n${ctx.perHabit.map((h) => `- ${h.name} (${h.category}, ${h.frequency}): completed ${h.completedDays} of the past 7 days, target ${h.targetDays}/weeks`).join("\n")}\n\nPlease write the personalized weekly report now.`;
 
-    const {content } = await chatCompletion({
-        system: SYSTEM_PROMPTS.weekly,
-        user: userMsg,
+    const { content } = await chatCompletion({
+      system: SYSTEM_PROMPTS.weekly,
+      user: userMsg,
     });
 
     await AiInsight.create({
-        userId: req.user._id,
-        type: "weekly",
-        content,
+      userId: req.user._id,
+      type: "weekly",
+      content,
     });
 
     res.json({ content });
@@ -52,3 +55,4 @@ export const weeklyReport = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
