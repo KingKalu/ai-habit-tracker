@@ -147,4 +147,48 @@ export const recoveryPlan = async (req, res) => {
   }
 };
 
+export const chatAnalysis = async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question)
+      return res.status(400).json({ message: "Question is required" });
+
+    const habits = await Habit.find({
+      userId: req.user._id,
+      isArchived: false,
+    });
+    const days = lastNDays(30);
+    const logs = HabitLog.find({
+      userId: req.user._id,
+      completedDate: { $gte: days[0], $lte: days[days.length - 1] },
+    });
+
+    const context = habits
+      .map((h) => {
+        const hLogs = logs.filter((l) => String(l.habitId) === String(h._id));
+        const byDow = [0, 0, 0, 0, 0, 0, 0];
+        for (const l of hLogs) {
+          const dow = new Date(l.completedDate).getDay();
+          byDow[dow] += 1;
+        }
+        return `${h.name} (${h.category}): ${hLogs.length}/30 in last 30 days, by weekday [Sun, Mon, Tue, Wed, Thur, Fri, Sat]=${JSON.stringify(byDow)}`;
+      })
+      .join("\n");
+
+    const userMsg = `User question: "${question}"\n\nUser data (last 30 days):\n${context}\n\nAnswer now.`;
+    const { content } = await chatCompletion({
+      system: SYSTEM_PROMPTS.chat,
+      user: userMsg,
+    });
+    await AiInsight.create({
+      userId: req.user._id,
+      type: "chat",
+      content,
+      meta: { question },
+    });
+    res.json({ content });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
